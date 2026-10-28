@@ -1,0 +1,25 @@
+# Virtual environment
+venv/
+.venv/
+
+# ChromaDB local persistence
+chroma_db/
+
+# Uploads directory
+uploads/
+
+# Environment files
+.env
+
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
