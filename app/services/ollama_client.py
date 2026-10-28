@@ -204,20 +204,55 @@ class OllamaClient:
             cleaned = re.sub(r"\s*```$", "", cleaned)
             cleaned = cleaned.strip()
 
+        # 1. Direct parse attempt
         try:
             parsed = json.loads(cleaned)
             return parsed, metrics
         except json.JSONDecodeError:
-            # Fallback regex extraction of outermost JSON object or list
-            json_match = re.search(r"(\{.*\}|\[.*\])", cleaned, re.DOTALL)
-            if json_match:
-                try:
-                    parsed = json.loads(json_match.group(0))
-                    return parsed, metrics
-                except json.JSONDecodeError:
-                    pass
+            pass
 
-            raise OllamaClientError(f"Failed to parse model JSON output: {content[:200]}")
+        # 2. Backwards-trimming to last completed object in truncated JSON
+        last_brace = cleaned.rfind("}")
+        while last_brace > 50:
+            sub = cleaned[:last_brace + 1]
+            open_b = sub.count("{") - sub.count("}")
+            open_k = sub.count("[") - sub.count("]")
+            if open_k >= 0 and open_b >= 0:
+                candidate = sub + ("]" * open_k) + ("}" * open_b)
+                try:
+                    parsed = json.loads(candidate)
+                    return parsed, metrics
+                except Exception:
+                    pass
+            last_brace = cleaned.rfind("}", 0, last_brace)
+
+        # 3. Unterminated string / bracket repair
+        if cleaned.startswith("{") and not cleaned.endswith("}"):
+            truncated = cleaned.rstrip()
+            if truncated.count('"') % 2 != 0:
+                truncated += '"'
+            open_brackets = truncated.count("[") - truncated.count("]")
+            if open_brackets > 0:
+                truncated += "]" * open_brackets
+            open_braces = truncated.count("{") - truncated.count("}")
+            if open_braces > 0:
+                truncated += "}" * open_braces
+            try:
+                parsed = json.loads(truncated)
+                return parsed, metrics
+            except Exception:
+                pass
+
+        # 4. Outermost regex match fallback
+        json_match = re.search(r"(\{.*\}|\[.*\])", cleaned, re.DOTALL)
+        if json_match:
+            try:
+                parsed = json.loads(json_match.group(0))
+                return parsed, metrics
+            except json.JSONDecodeError:
+                pass
+
+        raise OllamaClientError(f"Failed to parse model JSON output: {content[:200]}")
 
 
 ollama_client = OllamaClient()

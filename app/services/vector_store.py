@@ -38,7 +38,7 @@ class VectorStore:
         texts = [c.text for c in chunks]
         embeddings = ollama_client.get_embeddings_batch(texts)
 
-        ids = [f"{memory_id}_{c.chunk_id}" for c in chunks]
+        ids = [c.chunk_id for c in chunks]
         metadatas = [
             {
                 "memory_id": memory_id,
@@ -144,9 +144,9 @@ class VectorStore:
 
     def get_chunk(self, memory_id: str, chunk_id: str) -> Optional[Chunk]:
         """Retrieves a single chunk by memory_id and chunk_id."""
-        target_id = f"{memory_id}_{chunk_id}"
+        target_ids = [chunk_id, f"{memory_id}_{chunk_id}"]
         data = self.collection.get(
-            ids=[target_id],
+            ids=target_ids,
             include=["documents", "metadatas"]
         )
         if data and data.get("ids") and len(data["ids"]) > 0:

@@ -49,7 +49,7 @@ def create_chunks(
         # If entire segment fits within target_size + tolerance, keep intact
         if len(seg_text) <= target_size + 150:
             chunk = Chunk(
-                chunk_id=f"chunk_{chunk_counter}",
+                chunk_id=f"{memory_id}_c{chunk_counter}",
                 memory_id=memory_id,
                 index=chunk_counter,
                 text=seg_text,
@@ -89,7 +89,7 @@ def create_chunks(
                 char_end_rel = seg_text.find(last_sent, max(0, char_start_rel)) + len(last_sent)
                 
                 chunk = Chunk(
-                    chunk_id=f"chunk_{chunk_counter}",
+                    chunk_id=f"{memory_id}_c{chunk_counter}",
                     memory_id=memory_id,
                     index=chunk_counter,
                     text=chunk_text,

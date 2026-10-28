@@ -31,7 +31,7 @@ def test_create_chunks_attaches_metadata_and_boundaries():
         assert c.memory_id == "mem_1"
         assert c.source_title == "Oaxaca Childhood"
         assert c.author == "Maria"
-        assert c.chunk_id.startswith("chunk_")
+        assert c.chunk_id.startswith(f"{c.memory_id}_")
         assert not c.text.endswith(" ")
         # Ensure sentences are not chopped mid-word
         for word in c.text.split():
