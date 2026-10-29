@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ofrenda: Offline Remembrance Keeper</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="candle-glow-bg"></div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-brand">
+                <span class="flame-symbol" aria-hidden="true">&#128367;&#65039;</span>
+                <div class="brand-text">
+                    <h1 class="brand-title">Ofrenda</h1>
+                    <p class="brand-subtitle">Offline Remembrance Keeper</p>
+                </div>
+            </div>
+
+            <div class="header-status">
+                <div id="status-badge" class="status-badge status-loading">
+                    <span class="status-dot"></span>
+                    <span id="status-text">Connecting to local Ollama...</span>
+                </div>
+                <div id="memory-counter" class="memory-counter">
+                    <span id="memory-count-num">--</span> memories preserved
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs" role="tablist">
+            <button class="tab-btn active" data-tab="tribute" role="tab" aria-selected="true">
+                <span class="tab-icon">&#128367;&#65039;</span> Remembrance Tribute
+            </button>
+            <button class="tab-btn" data-tab="ofrenda" role="tab" aria-selected="false">
+                <span class="tab-icon">&#127804;</span> Ofrenda Altar
+            </button>
+            <button class="tab-btn" data-tab="ask" role="tab" aria-selected="false">
+                <span class="tab-icon">&#128330;&#65039;</span> Ask the Keeper
+            </button>
+            <button class="tab-btn" data-tab="memories" role="tab" aria-selected="false">
+                <span class="tab-icon">&#128214;</span> Memories Archive
+            </button>
+        </nav>
+
+        <!-- Tab 1: Remembrance Tribute -->
+        <section id="tab-tribute" class="tab-content active" role="tabpanel">
+            <div class="panel-header">
+                <div>
+                    <h2 class="panel-title">Remembrance Tribute</h2>
+                    <p class="panel-desc">A gentle tribute where every sentence is cited and verified against source memories.</p>
+                </div>
+                <div class="panel-actions">
+                    <button id="btn-generate-tribute" class="btn btn-primary">
+                        <span class="btn-icon">&#9881;&#65039;</span> Generate Tribute
+                    </button>
+                    <button id="btn-export-html" class="btn btn-secondary" disabled>
+                        <span class="btn-icon">&#128190;</span> Export HTML
+                    </button>
+                </div>
+            </div>
+
+            <div id="tribute-loading" class="loading-state hidden">
+                <div class="flicker-candle">&#128367;&#65039;</div>
+                <p>Consulting local memories with Gemma 3 4B...</p>
+                <span class="loading-sub">Verifying every sentence against family records</span>
+            </div>
+
+            <div id="tribute-display" class="tribute-card">
+                <div class="tribute-placeholder">
+                    <p>Click <strong>"Generate Tribute"</strong> to create a verified remembrance tribute honoring your loved one.</p>
+                </div>
+            </div>
+
+            <div id="tribute-audit" class="audit-panel hidden">
+                <h3 class="audit-title">&#128269; Citation Audit & Drop Metrics</h3>
+                <div class="audit-stats">
+                    <span class="stat-item stat-verified">Verified Sentences: <strong id="stat-verified-count">0</strong></span>
+                    <span class="stat-item stat-dropped">Dropped Hallucinations: <strong id="stat-dropped-count">0</strong></span>
+                    <span class="stat-item stat-latency">Generation Time: <strong id="stat-tribute-latency">0ms</strong></span>
+                </div>
+                <div id="audit-drop-log" class="drop-log"></div>
+            </div>
+        </section>
+
+        <!-- Tab 2: Ofrenda Altar Cards -->
+        <section id="tab-ofrenda" class="tab-content" role="tabpanel">
+            <div class="panel-header">
+                <div>
+                    <h2 class="panel-title">The Ofrenda Altar</h2>
+                    <p class="panel-desc">Favorite foods, melodies, places, and proverbs extracted deterministically and gently reworded.</p>
+                </div>
+                <button id="btn-load-ofrenda" class="btn btn-primary">
+                    <span class="btn-icon">&#10024;</span> Refresh Altar Cards
+                </button>
+            </div>
+
+            <div id="ofrenda-loading" class="loading-state hidden">
+                <div class="flicker-candle">&#128367;&#65039;</div>
+                <p>Gathering favorite offerings and songs from memories...</p>
+            </div>
+
+            <div id="ofrenda-grid-container" class="ofrenda-categories">
+                <!-- Dynamically filled: Foods, Songs, Places, Sayings -->
+            </div>
+        </section>
+
+        <!-- Tab 3: Ask the Keeper -->
+        <section id="tab-ask" class="tab-content" role="tabpanel">
+            <div class="panel-header">
+                <div>
+                    <h2 class="panel-title">Ask the Keeper</h2>
+                    <p class="panel-desc">Speak with the Keeper of memories. The Keeper only repeats what family wrote; unmentioned facts are strictly refused.</p>
+                </div>
+            </div>
+
+            <div class="ask-box">
+                <div class="prompt-chips">
+                    <span class="chip-label">Try asking:</span>
+                    <button class="chip-btn" data-q="What did she love to cook?">"What did she love to cook?"</button>
+                    <button class="chip-btn" data-q="What song did she love?">"What song did she love?"</button>
+                    <button class="chip-btn" data-q="What was her favorite saying?">"What was her favorite saying?"</button>
+                    <button class="chip-btn chip-refusal" data-q="What was her phone number?">"What was her phone number?" (Refusal Test)</button>
+                </div>
+
+                <form id="form-ask" class="ask-input-form">
+                    <input type="text" id="input-question" class="input-text" placeholder="Ask anything about their life, stories, or favorites..." required>
+                    <button type="submit" id="btn-ask-submit" class="btn btn-primary">
+                        Ask Keeper
+                    </button>
+                </form>
+            </div>
+
+            <div id="ask-loading" class="loading-state hidden">
+                <div class="flicker-candle">&#128367;&#65039;</div>
+                <p>Consulting family records with Gemma 3 4B...</p>
+            </div>
+
+            <div id="ask-result" class="ask-result-container hidden">
+                <!-- Dynamically rendered answer -->
+            </div>
+        </section>
+
+        <!-- Tab 4: Memories Archive -->
+        <section id="tab-memories" class="tab-content" role="tabpanel">
+            <div class="panel-header">
+                <div>
+                    <h2 class="panel-title">Memories Archive</h2>
+                    <p class="panel-desc">All stories, letters, and memories stored strictly on this laptop.</p>
+                </div>
+            </div>
+
+            <div class="memories-layout">
+                <!-- Add Memory Form -->
+                <div class="add-memory-card">
+                    <h3 class="card-subtitle">&#10010; Add a Memory</h3>
+                    <div class="subtabs">
+                        <button class="subtab-btn active" data-subtab="paste">Paste Text</button>
+                        <button class="subtab-btn" data-subtab="upload">Upload Document</button>
+                    </div>
+
+                    <!-- Paste Text Form -->
+                    <form id="form-paste-memory" class="memory-form active">
+                        <div class="form-group">
+                            <label for="mem-title">Title / Occasion *</label>
+                            <input type="text" id="mem-title" class="input-text" placeholder="e.g. Grandma's Sunday Mole" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="mem-author">Who told this story? (Optional)</label>
+                            <input type="text" id="mem-author" class="input-text" placeholder="e.g. Mateo (Grandson)">
+                        </div>
+                        <div class="form-group">
+                            <label for="mem-content">Memory Text *</label>
+                            <textarea id="mem-content" class="input-textarea" rows="6" placeholder="Write or paste the story here..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save to Altar</button>
+                    </form>
+
+                    <!-- Upload File Form -->
+                    <form id="form-upload-memory" class="memory-form">
+                        <div class="form-group">
+                            <label for="upload-file">Select Document (.txt, .md, .docx, .pdf) *</label>
+                            <input type="file" id="upload-file" accept=".txt,.md,.docx,.pdf" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="upload-title">Title (Optional, defaults to filename)</label>
+                            <input type="text" id="upload-title" class="input-text" placeholder="e.g. Letters from Oaxaca">
+                        </div>
+                        <div class="form-group">
+                            <label for="upload-author">Who told this story? (Optional)</label>
+                            <input type="text" id="upload-author" class="input-text" placeholder="e.g. Aunt Lucia">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Upload & Index</button>
+                    </form>
+                </div>
+
+                <!-- Existing Memories List -->
+                <div class="memories-list-card">
+                    <h3 class="card-subtitle">&#128218; Stored Stories (<span id="archive-count">0</span>)</h3>
+                    <div id="memories-list" class="memories-list">
+                        <!-- Loaded via JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p><strong>Ofrenda: Offline Remembrance Keeper</strong> &bull; Completely Offline &bull; No Cloud &bull; Citations Checked Against Source Text</p>
+        </footer>
+    </div>
+
+    <!-- Citation Popover Tooltip -->
+    <div id="global-popover" class="citation-popover-global hidden" role="tooltip">
+        <div class="popover-title">Verified Source Quote</div>
+        <blockquote id="popover-quote-text" class="popover-quote"></blockquote>
+        <div id="popover-source-meta" class="popover-meta"></div>
+        <div class="popover-status">&#10003; Verified in source memory chunk</div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

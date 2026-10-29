@@ -57,6 +57,11 @@ class OllamaClient:
                 "has_embed": False
             }
 
+    def check_health(self) -> Tuple[bool, List[str]]:
+        """Convenience tuple health checker: (is_reachable, list_of_models)."""
+        info = self.check_connection()
+        return info.get("reachable", False), info.get("models", [])
+
     def get_embedding(self, text: str, model: Optional[str] = None) -> List[float]:
         """Generates embedding vector for a single text using local Ollama model."""
         embed_model = model or settings.OLLAMA_EMBED_MODEL

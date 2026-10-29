@@ -58,6 +58,14 @@ def find_and_expand_quote(raw_quote: str, doc_text: str) -> Tuple[Optional[str],
     if not clean_quote:
         return None, "dropped"
 
+    # 0. If quote contains multiple sentences, find first grounded component sentence
+    quote_parts = split_into_sentences(clean_quote)
+    if len(quote_parts) > 1:
+        for qp in quote_parts:
+            expanded, match_type = find_and_expand_quote(qp, doc_text)
+            if expanded and match_type != "dropped":
+                return expanded, match_type
+
     sentences = split_into_sentences(doc_text)
     if not sentences:
         return None, "dropped"
