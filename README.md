@@ -9,17 +9,17 @@
 
 **Ofrenda** is an offline memory archive and remembrance keeper. You add stories, letters, recipes, or audio transcripts about a departed loved one, ask questions, and generate a gentle remembrance page.
 
-Unlike typical RAG or AI biographers that hallucinate dates, relationships, and sentimental fabrications:
+Unlike ungrounded RAG or conversational biographers that can invent dates, relationships, or details:
 - **Strict Grounding:** The narrator is "the Keeper", who speaks *about* the person in the third person.
 - **Verification Engine:** Every generated sentence must quote and share key content words with a verified sentence in the source text.
-- **Refusal Guarantee:** If a fact is not in the stories (e.g. *"What was her phone number?"*), Ofrenda refuses: *"The stories don't mention that."*
-- **100% Offline Runtime:** Runs completely on your laptop using open-source models (**Gemma 3 4B** and **nomic-embed-text**) via **Ollama**, local **ChromaDB**, and **FastAPI**. No external CDNs, no telemetry, no cloud APIs.
+- **Refusal Behavior:** If a fact is not in the stories (e.g. *"What was her phone number?"*), Ofrenda returns: *"The stories don't mention that."*
+- **Offline Runtime (citations checked against the source text):** Runs locally on your laptop using open-source models (**Gemma 3 4B** and **nomic-embed-text**) via **Ollama**, local **ChromaDB**, and **FastAPI**. No external CDNs, no telemetry, no cloud APIs.
 
 ---
 
 ## 2. Why Open Models & Local AI?
 
-1. **Absolute Family Privacy:** Personal memories, grief, and family stories should never be uploaded to cloud AI providers, sold for training, or retained on remote servers.
+1. **Absolute Family Privacy:** Personal memories, grief, and family stories are kept local on your machine and not uploaded to cloud AI providers, sold for training, or retained on remote servers.
 2. **Works With the Wi-Fi Off:** In the spirit of Dia de los Muertos candlelight vigils, Ofrenda works even during power or internet outages.
 3. **No Per-Query Costs:** No subscription or token bills.
 4. **Model Swappability:** Switch between models (e.g., `gemma3:4b`, `llama3.2:3b`, `mistral`) simply by modifying `.env`.
@@ -45,7 +45,7 @@ Unlike typical RAG or AI biographers that hallucinate dates, relationships, and 
 │ 3. Multi-Stage Verification Pipeline                   │
 │    ✓ Exact / Normalized / Fuzzy Substring Verification │
 │    ✓ Content Word Overlap (Names, foods, dates, places)│
-│    ✓ Anti-Hallucination Entity & Date Checker          │
+│    ✓ Strict Entity & Date Consistency Checker          │
 │    ✗ Drop invalid sentences and log reasons            │
 └────────────────────────────────────────────────────────┘
 ```
@@ -61,17 +61,20 @@ Unlike typical RAG or AI biographers that hallucinate dates, relationships, and 
 
 ## 4. Measured Results (Real Benchmarks)
 
-Tested locally on Windows with an RTX GPU running Ollama:
+Measured directly on Windows with Ollama running locally (`gemma3:4b` and `nomic-embed-text`):
 
-| Task / Query | Model | Latency | Verified Citations | Dropped Items / Reasons | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Ask Known Fact** (*"What did she love to cook?"*) | Gemma 3 4B | 13.9s | 1 verified quote | 0 dropped | **Answered & Verified** |
-| **Refusal Test** (*"What was her phone number?"*) | Gemma 3 4B | 3.8s | 0 (refusal) | 0 dropped | **Refused cleanly** |
-| **Refusal Test** (*"Electric car in Paris?"*) | Gemma 3 4B | 3.2s | 0 (refusal) | 0 dropped | **Refused cleanly** |
-| **Ofrenda Altar** (Foods, Songs, Places, Sayings) | Gemma 3 4B | 17.6s | 4 verified quotes | 0 dropped | **All 4 Cards Verified** |
-| **Remembrance Tribute** (3-4 paragraphs) | Gemma 3 4B | 18.3s | 2 verified sentences | 5 dropped (unsupported quotes) | **Audited & Filtered** |
+| Task / Query | Model | Latency | Verified Citations | Dropped Items / Reasons | Status | Measured Source |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Ask Known Fact** (*"What did she love to cook?"*) | Gemma 3 4B | 5.1s | 1 verified quote | 0 dropped | **Answered & Verified** | `cli.py --ask` (task-122) |
+| **Ask Known Fact** (*"What song did she sing?"*) | Gemma 3 4B | 5.4s | 1 verified quote | 0 dropped | **Answered & Verified** | `cli.py --ask` (task-127) |
+| **Refusal Test** (*"What was her phone number?"*) | Gemma 3 4B | 4.0s | 0 (refusal) | 0 dropped | **Refused cleanly** | `cli.py --ask` (task-132) |
+| **Refusal Test** (*"When was her birthday?"*) | Gemma 3 4B | 4.6s | 0 (refusal) | 0 dropped | **Refused cleanly** | `cli.py --ask` (task-134) |
+| **Refusal Test** (*"What was her favorite color?"*) | Gemma 3 4B | 4.0s | 0 (refusal) | 0 dropped | **Refused cleanly** | `cli.py --ask` (task-140) |
+| **Ofrenda Altar** (Foods, Songs, Places, Sayings) | Gemma 3 4B | 17.1s | 4 verified quotes | 0 dropped | **All 4 Cards Verified** | `cli.py --ofrenda` (task-142) |
+| **Remembrance Tribute** (Run 2 & 3) | Gemma 3 4B | 15.3s | 7 verified sentences | 0 dropped | **Audited & Filtered** | `cli.py --tribute` (task-110, task-115) |
+| **Remembrance Tribute** (Run 1) | Gemma 3 4B | 23.5s | 5 verified sentences | 2 dropped (content overlap) | **Audited & Filtered** | `cli.py --tribute` (task-101) |
 
-*All drop counts and reasons are visible directly in the UI audit log and CLI output.*
+*Citations are checked against the source text. All drop counts and reasons are visible directly in the UI audit log and CLI output.*
 
 ---
 
